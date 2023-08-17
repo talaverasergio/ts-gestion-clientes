@@ -24,7 +24,7 @@ function ts_crear_database(){
     
     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'tsgestiondb';
+    $table_name = $wpdb->prefix . 'ts_gestion_db';
     $charset_collate = $wpdb->get_charset_collate();
 
     $sql = "CREATE TABLE $table_name (
@@ -39,4 +39,19 @@ function ts_crear_database(){
     dbDelta($sql);
 }
     
-register_activation_hook( __FILE__, 'ts_crear_database' );?>
+register_activation_hook( __FILE__, 'ts_crear_database' );
+
+//Eliminamos la database al desinstalar
+function ts_remover_database(){
+    
+    global $wpdb;
+    
+    $table_name = $wpdb->prefix . 'ts_gestion_db';
+
+    $sql = "DROP TABLE IF EXISTS $table_name";
+    $wpdb->query($sql);
+
+    delete_option('ts_gestion_clientes_db_version');
+}
+
+register_deactivation_hook(__FILE__, 'ts_remover_database');?>
