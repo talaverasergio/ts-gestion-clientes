@@ -24,19 +24,39 @@ function ts_crear_database(){
     
     global $wpdb;
 
-    $table_name = $wpdb->prefix . 'ts_gestion_db';
+    $users_table_name = $wpdb->prefix . 'ts_gestion_db_users';
+    $attendance_table_name = $wpdb->prefix . 'ts_gestion_db_attendance';
+    $payment_table_name = $wpdb->prefix . 'ts_gestion_db_payment';
+    
     $charset_collate = $wpdb->get_charset_collate();
 
-    $sql = "CREATE TABLE $table_name (
-        id int(11) NOT NULL AUTO_INCREMENT,
+    $sql = "CREATE TABLE $users_table_name (
         user_id int(11) NOT NULL,
-        fecha_asistencia datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-        fecha_pago datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-        PRIMARY KEY  (id)
+        PRIMARY KEY  (user_id)
     ) $charset_collate;";
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     dbDelta($sql);
+
+    $wpdb->query("CREATE TABLE $attendance_table_name (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        user_id INT(11) NOT NULL,
+        fecha_asistencia DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        PRIMARY KEY  (id),
+        FOREIGN KEY  (user_id) REFERENCES $users_table_name(user_id)
+    ) $charset_collate;"
+    );
+
+    $wpdb->query("CREATE TABLE $payment_table_name (
+        id INT(11) NOT NULL AUTO_INCREMENT,
+        user_id INT(11) NOT NULL,
+        monto INT(11) NOT NULL,
+        detalle TINYTEXT,
+        fecha_pago DATETIME DEFAULT '0000-00-00 00:00:00' NOT NULL,
+        PRIMARY KEY  (id),
+        FOREIGN KEY  (user_id) REFERENCES $users_table_name(user_id)
+    ) $charset_collate;"
+    );
 }
     
 register_activation_hook( __FILE__, 'ts_crear_database' );
@@ -46,9 +66,17 @@ function ts_remover_database(){
     
     global $wpdb;
     
-    $table_name = $wpdb->prefix . 'ts_gestion_db';
+    $users_table_name = $wpdb->prefix . 'ts_gestion_db_users';
+    $attendance_table_name = $wpdb->prefix . 'ts_gestion_db_attendance';
+    $payment_table_name = $wpdb->prefix . 'ts_gestion_db_payment';    
+    
+    $sql = "DROP TABLE IF EXISTS $users_table_name";
+    $wpdb->query($sql);
 
-    $sql = "DROP TABLE IF EXISTS $table_name";
+    $sql = "DROP TABLE IF EXISTS $attendance_table_name";
+    $wpdb->query($sql);
+
+    $sql = "DROP TABLE IF EXISTS $payment_table_name";
     $wpdb->query($sql);
 
     delete_option('ts_gestion_clientes_db_version');
